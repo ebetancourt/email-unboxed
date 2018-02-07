@@ -1,0 +1,49 @@
+{
+  "name": "microblog",
+  "version": "1.0.0",
+  "description": "just a learning project",
+  "main": "index.js",
+  "author": "Elliot Betancourt <elliot@elliotbetancourt.com>",
+  "license": "MIT",
+  "dependencies": {
+    "babel-preset-es2015": "^6.22.0",
+    "babel-preset-react": "^6.22.0",
+    "babelify": "^7.3.0",
+    "bootstrap": "4.0.0-alpha.6",
+    "bootstrap-sass": "^3.3.7",
+    "browser-sync": "^2.18.6",
+    "browserify": "^14.0.0",
+    "gulp": "^3.9.1",
+    "gulp-autoprefixer": "^3.1.1",
+    "gulp-babel": "^6.1.2",
+    "gulp-concat": "^2.6.1",
+    "gulp-sass": "^3.1.0",
+    "gulp-sourcemaps": "^2.4.0",
+    "gulp-uglify": "^2.0.1",
+    "jquery": "^3.1.1",
+    "jquery-lazyload": "^1.9.7",
+    "jquery-ui": "^1.12.1",
+    "react": "^15.4.2",
+    "react-bootstrap": "^0.30.7",
+    "react-dom": "^15.4.2",
+    "tether": "^1.4.0",
+    "uglify": "^0.1.5",
+    "ui": "^0.2.4",
+    "vinyl-buffer": "^1.0.0",
+    "vinyl-source-stream": "^1.1.0",
+    "watchify": "^3.9.0"
+  },
+  "browserify": {
+    "transform": [
+      [
+        "babelify",
+        {
+          "presets": [
+            "es2015",
+            "react"
+          ]
+        }
+      ]
+    ]
+  }
+}
