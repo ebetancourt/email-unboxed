@@ -14,12 +14,7 @@ window.bootstrap = require('bootstrap');
 import React from 'react';
 import { render } from 'react-dom';
 import 'react-bootstrap';
+import App from './components/App';
 
-class StorePicker extends React.Component {
-  render() {
-    // Any where else
-    return <p>Hello There World!</p>
-  }
-}
 
-render(<StorePicker/>, document.querySelector('#main'));
+render(<App />, document.querySelector('#main'));

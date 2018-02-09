@@ -11,7 +11,7 @@ const prefix = require('gulp-autoprefixer');
 // const browserSync = require('browser-sync').create();
 
 function compile(watch) {
-  let bundler = watchify(browserify('./src/index.jsx', { debug: true, extensions: ['.js', '.jsx']}).transform(babel, {presets: ["es2015", 'react']}));
+  let bundler = watchify(browserify('./src/js/index.jsx', { debug: true, extensions: ['.js', '.jsx']}).transform(babel, {presets: ["es2015", 'react']}));
 
   function rebundle() {
     bundler.bundle()
