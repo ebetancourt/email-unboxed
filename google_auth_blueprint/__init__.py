@@ -1,17 +1,9 @@
 import flask
-import requests
 import json
-
-import google.oauth2.credentials
-import google_auth_oauthlib.flow
-import googleapiclient.discovery
 
 from google_api_wrapper import GoogleApiWrapper
 
 google_auth_blueprint = flask.Blueprint('google_auth_blueprint', __name__)
-
-# This variable specifies the name of a file that contains the OAuth 2.0
-# information for this application, including its client_id and client_secret.
 
 
 @google_auth_blueprint.route('/')
@@ -33,8 +25,8 @@ def test_api_request():
 
 @google_auth_blueprint.route('/authorize')
 def authorize():
-    gWrapper = get_api_wrapper()
-    return gWrapper.authorize()
+    google_wrapper = get_api_wrapper()
+    return google_wrapper.authorize()
 
 
 @google_auth_blueprint.route('/oauth2callback')
@@ -59,8 +51,7 @@ def revoke():
 def clear_credentials():
     google_wrapper = get_api_wrapper()
     google_wrapper.clear()
-    return ('Credentials have been cleared.<br><br>' +
-            print_index_table())
+    return 'Credentials have been cleared.<br><br>' + print_index_table()
 
 
 def print_index_table():
@@ -87,6 +78,7 @@ def print_index_table():
             '    After clearing the token, if you <a href="/test">test the ' +
             '    API request</a> again, you should go back to the auth flow.' +
             '</td></tr></table>')
+
 
 def get_api_wrapper():
     app = flask.current_app
