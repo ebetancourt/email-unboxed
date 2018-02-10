@@ -5,10 +5,11 @@ from api import api
 from google_auth_blueprint import google_auth_blueprint
 
 app = flask.Flask(__name__)
-# Note: A secret key is included in the sample so that it works.
-# If you use this code in your application, replace this with a truly secret
-# key. See http://flask.pocoo.org/docs/0.12/quickstart/#sessions.
-app.secret_key = 'REPLACE ME - this value is here as a placeholder.'
+
+app.config.from_object('config.config')
+app.config.from_object('config.gmail_api')
+
+app.secret_key = app.config.get('SECRET_KEY')
 app.register_blueprint(api, url_prefix='/api/v1')
 app.register_blueprint(google_auth_blueprint, url_prefix='/auth')
 
@@ -16,7 +17,8 @@ app.register_blueprint(google_auth_blueprint, url_prefix='/auth')
 @app.route('/', defaults={'path': ''})
 @app.route('/<path:path>')
 def index(path):
-    return flask.render_template('index.html', path=path)
+    return app.config.get('GMAIL_API').get('API_VERSION')
+    # return flask.render_template('index.html', path=path)
 
 
 if __name__ == '__main__':

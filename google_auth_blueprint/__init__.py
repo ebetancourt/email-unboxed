@@ -6,103 +6,50 @@ import google.oauth2.credentials
 import google_auth_oauthlib.flow
 import googleapiclient.discovery
 
+from google_api_wrapper import GoogleApiWrapper
+
 google_auth_blueprint = flask.Blueprint('google_auth_blueprint', __name__)
 
 # This variable specifies the name of a file that contains the OAuth 2.0
 # information for this application, including its client_id and client_secret.
-CLIENT_SECRETS_FILE = "client_secret.json"
-
-# This OAuth 2.0 access scope allows for full read/write access to the
-# authenticated user's account and requires requests to use an SSL connection.
-SCOPES = ['https://www.googleapis.com/auth/gmail.modify']
-API_SERVICE_NAME = 'gmail'
-API_VERSION = 'v1'
 
 
 @google_auth_blueprint.route('/')
 @google_auth_blueprint.route('/test')
 def test_api_request():
-    if 'credentials' not in flask.session:
+    google_wrapper = get_api_wrapper()
+    if not google_wrapper.credentials_available():
         return flask.redirect(flask.url_for('google_auth_blueprint.authorize'))
 
-    # Load credentials from the session.
-    credentials = google.oauth2.credentials.Credentials(
-        **flask.session['credentials'])
-
-    service = googleapiclient.discovery.build(
-        API_SERVICE_NAME, API_VERSION, credentials=credentials)
-
+    service = google_wrapper.get_service()
     results = service.users().labels().list(userId='me').execute()
     labels = results.get('labels', [])
 
     # Save credentials back to session in case access token was refreshed.
-    # ACTION ITEM: In a production app, you likely want to save these
-    #              credentials in a persistent database instead.
-    flask.session['credentials'] = credentials_to_dict(credentials)
+    google_wrapper.save_service_credentials()
 
     return json.dumps(labels)
 
 
 @google_auth_blueprint.route('/authorize')
 def authorize():
-    # Create flow instance to manage the OAuth 2.0 Authorization Grant Flow steps.
-    flow = google_auth_oauthlib.flow.Flow.from_client_secrets_file(
-        CLIENT_SECRETS_FILE, scopes=SCOPES)
-
-    flow.redirect_uri = flask.url_for('google_auth_blueprint.oauth2callback', _external=True)
-
-    authorization_url, state = flow.authorization_url(
-        # Enable offline access so that you can refresh an access token without
-        # re-prompting the user for permission. Recommended for web server apps.
-        access_type='offline',
-        # Enable incremental authorization. Recommended as a best practice.
-        include_granted_scopes='true')
-
-    # Store the state so the callback can verify the auth server response.
-    flask.session['state'] = state
-
-    return flask.redirect(authorization_url)
+    gWrapper = get_api_wrapper()
+    return gWrapper.authorize()
 
 
 @google_auth_blueprint.route('/oauth2callback')
 def oauth2callback():
-    # Specify the state when creating the flow in the callback so that it can
-    # verified in the authorization server response.
-    state = flask.session['state']
-
-    flow = google_auth_oauthlib.flow.Flow.from_client_secrets_file(
-        CLIENT_SECRETS_FILE, scopes=SCOPES, state=state)
-    flow.redirect_uri = flask.url_for('oauth2callback', _external=True)
-
-    # Use the authorization server's response to fetch the OAuth 2.0 tokens.
-    authorization_response = flask.request.url
-    flow.fetch_token(authorization_response=authorization_response)
-
-    # Store credentials in the session.
-    # ACTION ITEM: In a production app, you likely want to save these
-    #              credentials in a persistent database instead.
-    credentials = flow.credentials
-    flask.session['credentials'] = credentials_to_dict(credentials)
-
-    return flask.redirect(flask.url_for('test_api_request'))
+    google_wrapper = get_api_wrapper()
+    google_wrapper.store_authorization(flask.request.url)
+    return flask.redirect(flask.url_for('google_auth_blueprint.test_api_request'))
 
 
 @google_auth_blueprint.route('/revoke')
 def revoke():
-    if 'credentials' not in flask.session:
-        return ('You need to <a href="/authorize">authorize</a> before ' +
-                'testing the code to revoke credentials.')
+    google_wrapper = get_api_wrapper()
+    success = google_wrapper.revoke()
 
-    credentials = google.oauth2.credentials.Credentials(
-        **flask.session['credentials'])
-
-    revoke_call = requests.post('https://accounts.google.com/o/oauth2/revoke',
-                                params={'token': credentials.token},
-                                headers={'content-type': 'application/x-www-form-urlencoded'})
-
-    status_code = getattr(revoke_call, 'status_code')
-
-    if status_code == 200:
+    if success:
         return 'Credentials successfully revoked.' + print_index_table()
     else:
         return 'An error occurred.' + print_index_table()
@@ -110,19 +57,10 @@ def revoke():
 
 @google_auth_blueprint.route('/clear')
 def clear_credentials():
-    if 'credentials' in flask.session:
-        del flask.session['credentials']
+    google_wrapper = get_api_wrapper()
+    google_wrapper.clear()
     return ('Credentials have been cleared.<br><br>' +
             print_index_table())
-
-
-def credentials_to_dict(credentials):
-    return {'token': credentials.token,
-            'refresh_token': credentials.refresh_token,
-            'token_uri': credentials.token_uri,
-            'client_id': credentials.client_id,
-            'client_secret': credentials.client_secret,
-            'scopes': credentials.scopes}
 
 
 def print_index_table():
@@ -149,3 +87,7 @@ def print_index_table():
             '    After clearing the token, if you <a href="/test">test the ' +
             '    API request</a> again, you should go back to the auth flow.' +
             '</td></tr></table>')
+
+def get_api_wrapper():
+    app = flask.current_app
+    return GoogleApiWrapper(app.config.get('GMAIL_API'))
