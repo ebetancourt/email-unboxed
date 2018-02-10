@@ -18,6 +18,7 @@ SCOPES = ['https://www.googleapis.com/auth/gmail.modify']
 API_SERVICE_NAME = 'gmail'
 API_VERSION = 'v1'
 
+
 @google_auth_blueprint.route('/')
 @google_auth_blueprint.route('/test')
 def test_api_request():
@@ -95,11 +96,12 @@ def revoke():
     credentials = google.oauth2.credentials.Credentials(
         **flask.session['credentials'])
 
-    revoke = requests.post('https://accounts.google.com/o/oauth2/revoke',
-                           params={'token': credentials.token},
-                           headers={'content-type': 'application/x-www-form-urlencoded'})
+    revoke_call = requests.post('https://accounts.google.com/o/oauth2/revoke',
+                                params={'token': credentials.token},
+                                headers={'content-type': 'application/x-www-form-urlencoded'})
 
-    status_code = getattr(revoke, 'status_code')
+    status_code = getattr(revoke_call, 'status_code')
+
     if status_code == 200:
         return 'Credentials successfully revoked.' + print_index_table()
     else:
@@ -125,20 +127,24 @@ def credentials_to_dict(credentials):
 
 def print_index_table():
     return ('<table>' +
-            '<tr><td><a href="' + flask.url_for('google_auth_blueprint.test_api_request') + '">Test an API request</a></td>' +
+            '<tr><td><a href="' + flask.url_for('google_auth_blueprint.test_api_request') +
+            '">Test an API request</a></td>' +
             '<td>Submit an API request and see a formatted JSON response. ' +
             '    Go through the authorization flow if there are no stored ' +
             '    credentials for the user.</td></tr>' +
-            '<tr><td><a href="' + flask.url_for('google_auth_blueprint.authorize') + '">Test the auth flow directly</a></td>' +
+            '<tr><td><a href="' + flask.url_for('google_auth_blueprint.authorize') +
+            '">Test the auth flow directly</a></td>' +
             '<td>Go directly to the authorization flow. If there are stored ' +
             '    credentials, you still might not be prompted to reauthorize ' +
             '    the application.</td></tr>' +
-            '<tr><td><a href="' + flask.url_for('google_auth_blueprint.revoke') + '">Revoke current credentials</a></td>' +
+            '<tr><td><a href="' + flask.url_for('google_auth_blueprint.revoke') +
+            '">Revoke current credentials</a></td>' +
             '<td>Revoke the access token associated with the current user ' +
             '    session. After revoking credentials, if you go to the test ' +
             '    page, you should see an <code>invalid_grant</code> error.' +
             '</td></tr>' +
-            '<tr><td><a href="' + flask.url_for('google_auth_blueprint.clear_credentials') + '">Clear Flask session credentials</a></td>' +
+            '<tr><td><a href="' + flask.url_for('google_auth_blueprint.clear_credentials') +
+            '">Clear Flask session credentials</a></td>' +
             '<td>Clear the access token currently stored in the user session. ' +
             '    After clearing the token, if you <a href="/test">test the ' +
             '    API request</a> again, you should go back to the auth flow.' +
