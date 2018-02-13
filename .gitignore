@@ -166,3 +166,7 @@ typings/
 
 # next.js build output
 .next
+/tags
+/static/css/app.css
+/static/js/index.js
+/static/js/index.js.map

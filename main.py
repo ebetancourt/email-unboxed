@@ -17,8 +17,7 @@ app.register_blueprint(google_auth_blueprint, url_prefix='/auth')
 @app.route('/', defaults={'path': ''})
 @app.route('/<path:path>')
 def index(path):
-    return app.config.get('GMAIL_API').get('API_VERSION')
-    # return flask.render_template('index.html', path=path)
+    return flask.render_template('index.html', path=path)
 
 
 if __name__ == '__main__':

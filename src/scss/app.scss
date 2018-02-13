@@ -1,6 +1,9 @@
 // test simple project
 
-@import "../../node_modules/bootstrap/scss/bootstrap";
+@import "../../node_modules/bootswatch/dist/pulse/_variables";
+@import "../../node_modules/bootswatch/dist/pulse/bootstrap";
+@import "../../node_modules/bootswatch/dist/pulse/bootswatch";
+
 
 body {
   padding-top: 5rem;
