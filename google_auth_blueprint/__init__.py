@@ -83,3 +83,65 @@ def print_index_table():
 def get_api_wrapper():
     app = flask.current_app
     return GoogleApiWrapper(app.config.get('GMAIL_API'))
+
+
+@google_auth_blueprint.route('/emails')
+def pull_label_emails():
+    google_wrapper = get_api_wrapper()
+    if not google_wrapper.credentials_available():
+        return flask.redirect(flask.url_for('google_auth_blueprint.authorize'))
+
+    service = google_wrapper.get_service()
+    messages = ListMessagesWithLabels(service, 'me', ['Label_49'])
+    google_wrapper.save_service_credentials()
+    user_profile = service.users().getProfile(userId='me').execute()
+    user_email = user_profile['emailAddress']
+
+    message_list = []
+    for message in messages:
+        subject = next(iter([x for x in message['payload']['headers'] if x['name'] ==
+                        'Subject']))
+        message_list.append({
+            "subject": subject['value'],
+            "link" :
+            'https://mail.google.com/mail/u/{}/#inbox/{}'.format(user_email, message['id']),
+            "snippet":message['snippet']
+        })
+
+    return json.dumps(message_list)
+
+def ListMessagesWithLabels(service, user_id, label_ids=[]):
+    """List all Messages of the user's mailbox with label_ids applied.
+
+    Args:
+    service: Authorized Gmail API service instance.
+    user_id: User's email address. The special value "me"
+    can be used to indicate the authenticated user.
+    label_ids: Only return Messages with these labelIds applied.
+
+    Returns:
+    List of Messages that have all required Labels applied. Note that the
+    returned list contains Message IDs, you must use get with the
+    appropriate id to get the details of a Message.
+    """
+    response = service.users().messages().list(userId=user_id,
+                             q='after:1518472800 before:1518559200',
+                                           labelIds=label_ids).execute()
+    messages = []
+    if 'messages' in response:
+        messages.extend(response['messages'])
+
+    while 'nextPageToken' in response:
+        page_token = response['nextPageToken']
+        response = service.users().messages().list(userId=user_id,
+                                                 labelIds=label_ids,
+                             q='after:1518472800 before:1518559200',
+                                                 pageToken=page_token).execute()
+        messages.extend(response['messages'])
+
+    full_messages = []
+    for email in messages:
+        full_messages.append(service.users().messages().get(userId=user_id, id=email['id'],
+                                             format='full').execute())
+
+    return full_messages
