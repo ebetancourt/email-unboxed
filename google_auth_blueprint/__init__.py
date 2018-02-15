@@ -1,5 +1,4 @@
 import flask
-import json
 
 from google_api_wrapper import GoogleApiWrapper
 
@@ -20,7 +19,7 @@ def test_api_request():
     # Save credentials back to session in case access token was refreshed.
     google_wrapper.save_service_credentials()
 
-    return json.dumps(labels)
+    return flask.jsonify(labels)
 
 
 @google_auth_blueprint.route('/authorize')
@@ -108,7 +107,7 @@ def pull_label_emails():
             "snippet":message['snippet']
         })
 
-    return json.dumps(message_list)
+    return flask.jsonify(message_list)
 
 def ListMessagesWithLabels(service, user_id, label_ids=[]):
     """List all Messages of the user's mailbox with label_ids applied.
