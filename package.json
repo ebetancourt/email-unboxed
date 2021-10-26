@@ -22,7 +22,7 @@
     "gulp-uglify": "^2.0.1",
     "jquery": "^3.1.1",
     "jquery-lazyload": "^1.9.7",
-    "jquery-ui": "^1.12.1",
+    "jquery-ui": "^1.13.0",
     "react": "^15.4.2",
     "react-bootstrap": "^0.30.7",
     "react-dom": "^15.4.2",
